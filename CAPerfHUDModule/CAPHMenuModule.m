@@ -1,10 +1,13 @@
 #import "CAPHMenuModule.h"
-#import "CAPHMenuModuleViewController.h"
 
 @implementation CAPHMenuModule
+@synthesize backgroundViewController;
 
-- (CCUIContentModuleContentViewController *)contentViewController {
-    return [[CAPHMenuModuleViewController alloc] init];
+- (instancetype)init {
+    if ((self = [super init])) {
+        _contentViewController = [[CAPHMenuModuleViewController alloc] init];
+    }
+    return self;
 }
 
 @end
