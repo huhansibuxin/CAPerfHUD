@@ -16,8 +16,10 @@ jobs:
 
       - name: Setup Theos
         run: |
-          git clone --recursive https://github.com/theos/theos.git $THEOS
-          echo "THEOS=$THEOS" >> $GITHUB_ENV
+          THEOS_PATH="$HOME/theos"
+          git clone --recursive https://github.com/theos/theos.git "$THEOS_PATH"
+          echo "THEOS=$THEOS_PATH" >> $GITHUB_ENV
+          echo "THEOS_PATH=$THEOS_PATH" >> $GITHUB_ENV
 
       - name: Install dependencies
         run: |
