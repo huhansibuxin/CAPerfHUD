@@ -27,8 +27,8 @@ jobs:
 
       - name: Setup SDK
         run: |
-          cd $THEOS/sdks
-          curl -LO https://github.com/theos/sdks/releases/download/2025-06-12/iPhoneOS16.5.sdk.tar.xz
+          cd "$THEOS/sdks"
+          curl -LO "https://github.com/theos/sdks/releases/download/master-146e41f/iPhoneOS16.5.sdk.tar.xz"
           tar -xf iPhoneOS16.5.sdk.tar.xz
           rm iPhoneOS16.5.sdk.tar.xz
 
