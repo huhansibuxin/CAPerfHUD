@@ -1,0 +1,41 @@
+name: Build rootless deb
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Theos
+        run: |
+          git clone --recursive https://github.com/theos/theos.git $THEOS
+          echo "THEOS=$THEOS" >> $GITHUB_ENV
+
+      - name: Install dependencies
+        run: |
+          brew install dpkg ldid
+
+      - name: Setup SDK
+        run: |
+          cd $THEOS/sdks
+          curl -LO https://github.com/theos/sdks/releases/download/2025-06-12/iPhoneOS16.5.sdk.tar.xz
+          tar -xf iPhoneOS16.5.sdk.tar.xz
+          rm iPhoneOS16.5.sdk.tar.xz
+
+      - name: Build CAPerfHUDModule
+        run: |
+          make -C CAPerfHUDModule package THEOS_PACKAGE_SCHEME=rootless
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CAPerfHUDModule-rootless-deb
+          path: CAPerfHUDModule/packages/*.deb
