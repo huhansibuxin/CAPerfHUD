@@ -1,7 +1,10 @@
-#import <ControlCenterUIKit/CCUIMenuModuleViewController.h>
+#import <UIKit/UIKit.h>
+#import "ControlCenterUIKit/CCUIContentModule.h"
 
-@interface CAPHMenuModule : NSObject
-@end
+#import "CAPHMenuModuleViewController.h"
 
-@interface CAPHMenuModuleViewController : CCUIMenuModuleViewController
+@interface CAPHMenuModule : NSObject <CCUIContentModule>
+
+@property(readonly, nonatomic) CAPHMenuModuleViewController* contentViewController;
+
 @end
