@@ -48,14 +48,10 @@
     self.selected = !self.selected;
 
     if (self.selected) {
-        // Use custom overlay (clean, no Thermal Pressure block)
+        // Use custom FPS overlay
         [CAPFPSOverlayWindow.shared show];
     } else {
         [CAPFPSOverlayWindow.shared hide];
-        // Also disable system HUD if it was on
-        if (CADebugCommon.perfHUDLevel != 0) {
-            CADebugCommon.perfHUDLevel = 0;
-        }
     }
 
     [super buttonTapped:button forEvent:event];
