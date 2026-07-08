@@ -15,7 +15,7 @@
         self.backgroundColor = [UIColor clearColor];
         self.opaque = NO;
         self.contentMode = UIViewContentModeRedraw;
-        self.layer.zPosition = FLT_MAX;
+        self.userInteractionEnabled = NO;
     }
     return self;
 }
@@ -67,9 +67,10 @@
 
 @end
 
-#pragma mark - FPS Overlay Window Manager
+#pragma mark - FPS Overlay Manager
 
 @interface CAPFPSOverlayWindow ()
+@property (nonatomic, strong) UIWindow *window;
 @property (nonatomic, strong) CAPFPSBarView *barView;
 @property (nonatomic, strong) CADisplayLink *displayLink;
 @property (nonatomic, assign) CFTimeInterval lastTimestamp;
@@ -96,6 +97,22 @@
     return self;
 }
 
+- (UIWindowScene *)activeScene {
+    for (UIScene *s in [UIApplication sharedApplication].connectedScenes) {
+        if (s.activationState == UISceneActivationStateForegroundActive
+            && [s isKindOfClass:[UIWindowScene class]]) {
+            return (UIWindowScene *)s;
+        }
+    }
+    // Fallback: pick any window scene
+    for (UIScene *s in [UIApplication sharedApplication].connectedScenes) {
+        if ([s isKindOfClass:[UIWindowScene class]]) {
+            return (UIWindowScene *)s;
+        }
+    }
+    return nil;
+}
+
 - (void)setup {
     self.displayLink = [CADisplayLink displayLinkWithTarget:self
         selector:@selector(tick:)];
@@ -104,16 +121,33 @@
         forMode:NSRunLoopCommonModes];
 }
 
-- (UIView *)findStatusBarView {
-    // Find the highest-level window to attach our bar view to
-    for (UIWindow *window in [UIApplication sharedApplication].windows.reverseObjectEnumerator) {
-        if (window.windowLevel >= UIWindowLevelStatusBar
-            && !window.isHidden
-            && window.bounds.size.width > 0) {
-            return window;
-        }
-    }
-    return [UIApplication sharedApplication].windows.firstObject;
+- (void)createWindow {
+    UIWindowScene *scene = [self activeScene];
+    if (!scene) return;
+
+    CGRect screenBounds = [UIScreen mainScreen].bounds;
+    CGFloat barWidth = 64.0;
+    CGFloat barHeight = 18.0;
+    CGFloat margin = 10.0;
+    // Use top of safe area as reference Y position
+    CGFloat topInset = scene.statusBarManager.statusBarFrame.size.height;
+    if (topInset < 20.0) topInset = 20.0;
+    CGFloat x = screenBounds.size.width - barWidth - margin;
+    CGFloat y = topInset + 4.0;
+
+    self.window = [[UIWindow alloc] initWithWindowScene:scene];
+    self.window.frame = CGRectMake(x, y, barWidth, barHeight);
+    self.window.windowLevel = UIWindowLevelStatusBar + 100;
+    self.window.backgroundColor = [UIColor clearColor];
+    self.window.opaque = NO;
+    self.window.userInteractionEnabled = NO;
+    self.window.hidden = NO;
+
+    self.barView = [[CAPFPSBarView alloc] initWithFrame:
+        self.window.bounds];
+    self.barView.autoresizingMask = UIViewAutoresizingFlexibleWidth
+        | UIViewAutoresizingFlexibleHeight;
+    [self.window addSubview:self.barView];
 }
 
 - (void)tick:(CADisplayLink *)link {
@@ -138,36 +172,25 @@
     if (self.isVisible) return;
     self.isVisible = YES;
 
-    if (!self.barView) {
-        CGRect screenBounds = [UIScreen mainScreen].bounds;
-        CGFloat barWidth = 64.0;
-        CGFloat barHeight = 18.0;
-        CGFloat margin = 10.0;
-        CGFloat statusBarH = 20.0;
-        CGFloat x = screenBounds.size.width - barWidth - margin;
-        CGFloat y = statusBarH + 4.0;
-
-        self.barView = [[CAPFPSBarView alloc] initWithFrame:
-            CGRectMake(x, y, barWidth, barHeight)];
+    if (!self.window) {
+        [self createWindow];
     }
+
+    if (!self.window) return; // scene not available
 
     self.lastTimestamp = 0;
     self.frameCount = 0;
     self.barView.fps = 0;
     self.displayLink.paused = NO;
-
-    UIView *hostView = [self findStatusBarView];
-    if (hostView && self.barView.superview != hostView) {
-        [hostView addSubview:self.barView];
-    }
+    self.window.hidden = NO;
 }
 
 - (void)hide {
     if (!self.isVisible) return;
     self.isVisible = NO;
     self.displayLink.paused = YES;
+    self.window.hidden = YES;
     self.barView.fps = 0;
-    [self.barView removeFromSuperview];
 }
 
 @end
